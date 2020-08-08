@@ -13,7 +13,7 @@ exports.handler = async function (event) {
     const hours = getHours(localEventDate);
     const asgRes = await autoscaling
       .describeAutoScalingGroups({
-        AutoScalingGroupNames: [process.env.AutoScalingGroupName],
+        AutoScalingGroupNames: [process.env.autoScalingGroupName],
       })
       .promise();
     const { AutoScalingGroups } = asgRes;
@@ -26,14 +26,14 @@ exports.handler = async function (event) {
       !isWeekend(localEventDate)
     ) {
       params = {
-        AutoScalingGroupName: process.env.AutoScalingGroupName,
+        AutoScalingGroupName: process.env.autoScalingGroupName,
         MaxSize: 1,
         MinSize: 1,
         DesiredCapacity: 1,
       };
     } else if (MinSize > 0) {
       params = {
-        AutoScalingGroupName: process.env.AutoScalingGroupName,
+        AutoScalingGroupName: process.env.autoScalingGroupName,
         MaxSize: 0,
         MinSize: 0,
       };
