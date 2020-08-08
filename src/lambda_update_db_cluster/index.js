@@ -5,14 +5,14 @@ exports.handler = async function (event) {
   try {
     console.log('event', event);
     const params = {
-      DBClusterIdentifier: process.env.dBInstanceName,
+      DBInstanceIdentifier: process.env.dBInstanceName,
       MaxRecords: 20,
     };
-    const dbclustersRes = await rds.describeDBClusters(params).promise();
-    const { DBClusters } = dbclustersRes;
-    const { Status } = DBClusters[0];
-    console.log('Status', Status);
-    switch (Status) {
+    const dbInstancesRes = await rds.describeDBInstances(params).promise();
+    const { DBInstances } = dbInstancesRes;
+    const { DBInstanceStatus: status } = DBInstances[0];
+    console.log('Status', status);
+    switch (status) {
       case 'stopped':
         return rds
           .startDBInstance({
@@ -26,7 +26,7 @@ exports.handler = async function (event) {
           })
           .promise();
       default:
-        return Status;
+        return status;
     }
   } catch (error) {
     console.log(error);
