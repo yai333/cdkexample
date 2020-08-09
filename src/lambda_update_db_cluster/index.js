@@ -1,32 +1,43 @@
 const aws = require('aws-sdk');
-const rds = new aws.RDS();
+const { isWeekend, getHours } = require('date-fns');
+const { utcToZonedTime } = require('date-fns-tz');
 
+const rds = new aws.RDS();
+const START_TIME = 9;
+const TIMEZONE = 'Australia/Melbourne';
 exports.handler = async function (event) {
   try {
     console.log('event', event);
+    const { time = new Date() } = event;
+    const localEventDatetime = utcToZonedTime(time, TIMEZONE);
+    console.log('localEventDatetime', localEventDatetime);
+    const hours = getHours(localEventDatetime);
     const params = {
-      DBClusterIdentifier: process.env.DBClusterName,
+      DBInstanceIdentifier: process.env.dBInstanceName,
       MaxRecords: 20,
     };
-    const dbclustersRes = await rds.describeDBClusters(params).promise();
-    const { DBClusters } = dbclustersRes;
-    const { Status } = DBClusters[0];
-    console.log('Status', Status);
-    switch (Status) {
+    const dbInstancesRes = await rds.describeDBInstances(params).promise();
+    const { DBInstances } = dbInstancesRes;
+    const { DBInstanceStatus: status } = DBInstances[0];
+    console.log('Status', status);
+    switch (status) {
       case 'stopped':
-        return rds
-          .startDBCluster({
-            DBClusterIdentifier: process.env.DBClusterName,
-          })
-          .promise();
+        if (hours <= START_TIME && !isWeekend(localEventDatetime)) {
+          rds
+            .startDBInstance({
+              DBInstanceIdentifier: process.env.dBInstanceName,
+            })
+            .promise();
+        }
+        break;
       case 'available':
         return rds
-          .stopDBCluster({
-            DBClusterIdentifier: process.env.DBClusterName,
+          .stopDBInstance({
+            DBInstanceIdentifier: process.env.dBInstanceName,
           })
           .promise();
       default:
-        return Status;
+        return status;
     }
   } catch (error) {
     console.log(error);
