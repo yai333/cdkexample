@@ -1,4 +1,4 @@
-# Building Instance Scheduler using CDK
+# Creating a Instance Scheduler using AWS CDK
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app. The build step is not required when using JavaScript.
 
