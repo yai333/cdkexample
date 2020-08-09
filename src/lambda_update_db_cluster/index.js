@@ -1,9 +1,17 @@
 const aws = require('aws-sdk');
-const rds = new aws.RDS();
+const { isWeekend, getHours } = require('date-fns');
+const { utcToZonedTime } = require('date-fns-tz');
 
+const rds = new aws.RDS();
+const START_TIME = 9;
+const TIMEZONE = 'Australia/Melbourne';
 exports.handler = async function (event) {
   try {
     console.log('event', event);
+    const { time = new Date() } = event;
+    const localEventDatetime = utcToZonedTime(time, TIMEZONE);
+    console.log('localEventDatetime', localEventDatetime);
+    const hours = getHours(localEventDatetime);
     const params = {
       DBInstanceIdentifier: process.env.dBInstanceName,
       MaxRecords: 20,
@@ -14,11 +22,14 @@ exports.handler = async function (event) {
     console.log('Status', status);
     switch (status) {
       case 'stopped':
-        return rds
-          .startDBInstance({
-            DBInstanceIdentifier: process.env.dBInstanceName,
-          })
-          .promise();
+        if (hours <= START_TIME && !isWeekend(localEventDatetime)) {
+          rds
+            .startDBInstance({
+              DBInstanceIdentifier: process.env.dBInstanceName,
+            })
+            .promise();
+        }
+        break;
       case 'available':
         return rds
           .stopDBInstance({
