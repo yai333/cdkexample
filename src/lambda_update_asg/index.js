@@ -7,7 +7,6 @@ const TIMEZONE = 'Australia/Melbourne';
 const autoscaling = new aws.AutoScaling();
 exports.handler = async function (event) {
   try {
-    console.log('event', event);
     const { time = new Date() } = event;
     const localEventDatetime = utcToZonedTime(time, TIMEZONE);
     console.log('localEventDatetime', localEventDatetime);
@@ -39,8 +38,6 @@ exports.handler = async function (event) {
         MinSize: 0,
       };
     }
-    console.log('MinSize', MinSize);
-    console.log('MaxSize', MaxSize);
     if (!params) return;
     return autoscaling.updateAutoScalingGroup(params).promise();
   } catch (error) {
